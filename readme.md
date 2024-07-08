@@ -12,3 +12,10 @@ My shitty code might make your computer bsod.
 JK.
 
 :)
+
+**Run Via**
+
+```
+cl.exe code_{n}.exe && del *.obj
+```
+*Replace `n` with the name of the c file.*
