@@ -16,6 +16,14 @@ JK.
 **Run Via**
 
 ```
-cl.exe code_{n}.exe && del *.obj
+cl.exe code_{n}.c && del *.obj
+
+# OR
+
+gcc code_{n}.c -o code_{n}.exe
+
+# THEN
+
+code_{n}.exe
 ```
 *Replace `n` with the name of the c file.*
