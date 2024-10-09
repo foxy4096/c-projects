@@ -27,3 +27,25 @@ gcc code_{n}.c -o code_{n}.exe
 code_{n}.exe
 ```
 *Replace `n` with the name of the c file.*
+
+I have also made a code runner
+
+Compile the `makeshit.c` via this command
+
+```ps
+init.bat
+```
+
+It will generate a executable named ms.exe
+
+now use this runner like this
+
+```ps
+ms.exe {n}
+```
+
+You can also clear the builds by this command
+
+```ps
+ms.exe clear
+```
