@@ -13,20 +13,20 @@ int fetch();
 
 
 typedef enum {
-    PSH, // Push value onto stack/into a register
-    POP, // Pop value from stack
-    ADD, // Add top two values on stack
-    SUB, // Subtract top two values on stack
-    MOV, // Move value from one register to another
-    CMP, // Compare two values
-    JZ, // Jump if zero
-    HLT, // Halt execution
-    JMP, // Jump to instruction
-    NOP, // No operation (do nothing)
-    OUT, // Output register value
-    IN, // Input value into register
-    JLZ, // Jump if less than zero
-    JGZ, // Jump if greater than zero
+    PSH, // 0:Push value onto stack/into a register
+    POP, // 1:Pop value from stack
+    ADD, // 2:Add top two values on stack
+    SUB, // 3:Subtract top two values on stack
+    MOV, // 4:Move value from one register to another
+    CMP, // 5:Compare two values
+    JZ, // 6:Jump if zero
+    HLT, // 7:Halt execution
+    JMP, // 8:Jump to instruction
+    NOP, // 9:No operation (do nothing)
+    OUT, // 10:Output register value
+    IN, // 11:Input value into register
+    JLZ, // 12:Jump if less than zero
+    JGZ, // 13:Jump if greater than zero
 
 } InstructionSet;
 
@@ -57,22 +57,40 @@ typedef enum {
 int registers[NUM_REGS];
 
 const int program[] = {
+    // 0-2
     PSH, 0, 0,     // Push F0 = 0 onto stack
+    // 3-5
     PSH, 0, 1,     // Push F1 = 1 onto stack
+    // 6-9
     MOV, 0, R0, 0, // R0 = 0
+    // 10-13
     MOV, 0, R1, 1, // R1 = 1
+    // 14-16
     PSH, 0, 10,    // Push loop count (n = 10)
+    // 17-20
     MOV, 0, R2, 10,// R2 = 10 (loop counter)
     // LOOP:
+    // 21-23
     OUT, 1, R0,    // Print R0 (Fibonacci number)
+    // 24-28
     ADD, 1, R0, R1, R3, // R3 = R0 + R1
+    // 29-32
     MOV, 1, R0, R1, // R0 = R1
+    // 33-36
     MOV, 1, R1, R3, // R1 = R3
-    SUB, 1, R2, 1, R2, // R2 = R2 - 1
-    CMP, 1, R2, 0, // Compare R2 with 0
-    JLZ, 1, R2, 18, // If R2 == 0, jump to EXIT
-    JMP, 11,      // Jump to LOOP
+    // 37-41
+    SUB, 4, R2, 1, R2, // R2 = R2 - 1
+    // 42-46
+    CMP, 3, R2, 0, R4, // Compare R2 with 0 and set the R2 to 0 if equal and 1 if not equal
+    // 47-50
+    JLZ, 1, R2, 53, // If R2 == 0, jump to EXIT
+    // 51 JMP PC
+    // 51-52
+    JMP, 21,      // Jump to LOOP
+    // 53
+    NOP,         // No operation (do nothing)
     // EXIT:
+    // 54
     HLT
 };
 
@@ -89,10 +107,10 @@ int memory[MEMORY_SIZE]; // Memory for the virtual machine
 
 bool running = true;
 int stack[MAX_STACK_SIZE]; // Stack for the virtual machine
-int main(int agc, char** argv){
-    while(running) {
+int main(int agc, char** argv) {
+    while (running) {
         eval(fetch());
-        ++ip;
+            ++ip;
     }
 }
 
@@ -101,6 +119,7 @@ int fetch() {
 }
 
 void eval(int instr) {
+    printf("Instruction: %d\n",instr);
     switch(instr) {
         case HLT: {
             printf("HLT\n");
@@ -123,7 +142,7 @@ void eval(int instr) {
                 stack[++sp] = registers[value];
                 printf("PSH: Pushed register R%d value %d onto stack\n", value, registers[value]);
             } else {
-                printf("Invalid PSH mode\n");
+                printf("Invalid PSH mode %d\n", mode);
                 eval(HLT);
             }
             break;
@@ -141,7 +160,7 @@ void eval(int instr) {
                 registers[dest] = stack[sp--];
                 printf("POP: %d INTO R%d\n", stack[sp], dest);
             } else {
-                printf("Invalid POP mode\n");
+                printf("Invalid POP mode, %d\n", mode);
                 eval(HLT);
             }
             break;
@@ -202,7 +221,14 @@ void eval(int instr) {
                 int dest = program[++ip];
                 registers[dest] = a-b;
                 printf("SUB: %d - %d = %d\n", a, b, registers[dest]);
-            } else {
+            } else if(mode == 4){
+                int a = registers[program[++ip]];
+                int b = program[++ip];
+                int dest = program[++ip];
+                registers[dest] = a-b;
+                printf("SUB: %d - %d = %d\n", a, b, registers[dest]);
+            }
+            else {
                 printf("Invalid SUB mode\n");
                 eval(HLT);
             }
@@ -211,6 +237,7 @@ void eval(int instr) {
         
         case CMP: {
             int mode = program[++ip];
+            printf("CMP: %d\n", mode);
             if (mode == 0){
                 int a = stack[sp--];
                 int b = stack[sp--];
@@ -219,6 +246,7 @@ void eval(int instr) {
                 } else {
                     stack[++sp] = 1; // Set flag to 1 if not equal
                 }
+                printf("CMP:S-S %d == %d\n", a, b);
             } else if (mode == 1) {
                 // Register comparison
                 int a = registers[program[++ip]];
@@ -230,6 +258,7 @@ void eval(int instr) {
                 } else {
                     registers[dest] = 1; // Set flag to 1 if not equal
                 }
+                printf("CMP:R-R %d == %d\n", a, b);
             }else if (mode == 2) {
                 // Reg-Stack comparison
                 int a = stack[sp--];
@@ -241,7 +270,27 @@ void eval(int instr) {
                 } else {
                     registers[dest] = 1; // Set flag to 1 if not equal
                 }
+                printf("CMP:S-R %d == %d\n", a, b);
             }
+            else if (mode == 3) {
+                // Register-Constant comparison
+                int a = registers[program[++ip]];
+                int b = program[++ip];
+                int dest = program[++ip];
+                registers[dest] = 0; // Clear destination register
+                if (a == b) {
+                    registers[dest] = 0; // Set flag to 0 if equal
+                } else if (a < b) {
+                    registers[dest] = -1; // Set flag to -1 if less than
+                } else if (a > b) {
+                    registers[dest] = 1; // Set flag to 1 if greater than
+                }
+                else {
+                    registers[dest] = 1; // Set flag to 1 if not equal
+                }
+                printf("PC: %d\n", ip);
+                printf("CMP:R-C %d == %d\n", a, b);
+            }                
              else {
                 printf("Invalid CMP mode\n");
             }
@@ -249,27 +298,32 @@ void eval(int instr) {
 
         }
         case JMP: {
-            int addr = program[++ip];
-            ip = addr;
-            printf("JMP: INTO %d\n", ip);
+            int addr = program[++ip]; // Read address
+            printf(">>>>JMP: Requesting Jump to %d (Before execution, IP=%d)\n", addr, ip);
+            ip = addr-1;  // Try direct jump
+            printf(">>>>JMP: Jumped to %d (After execution, IP=%d)\n", addr, ip);
+            return;
             break;
         }
         case JZ: {
             int mode = program[++ip];
-            int addr = program[++ip];
             if (mode == 0) {
                 if (stack[sp] == 0) {
+                    int addr = program[++ip];
                     ip = addr;
                     printf("JZ: Jump to %d\n", ip);
                 } else {
                     printf("JZ: No jump, stack top is not zero\n");
                 }
             } else if (mode == 1) {
-                if (registers[program[++ip]] == 0) {
+                int reg = program[++ip];
+                if (registers[reg] == 0) {
+                    int addr = program[++ip];
                     ip = addr;
                     printf("JZ: Jump to %d\n", ip);
                 } else {
-                    printf("JZ: No jump, register is not zero\n");
+                    ip++;
+                    printf("JZ: No jump, register is not zero, %d\n", registers[reg]);
                 }
             } else {
                 printf("Invalid JZ mode\n");
@@ -278,23 +332,25 @@ void eval(int instr) {
             }
             break;
         }
-        JLZ: {
-            printf("JLZ\n");
+        case JLZ: {
             int mode = program[++ip];
-            int addr = program[++ip];
             if (mode == 0) {
+                int addr = program[++ip];
                 if (stack[sp] < 0) {
-                    ip = addr;
+                    ip = addr-1;
                     printf("JLZ: Jump to %d\n", ip);
                 } else {
                     printf("JLZ: No jump, stack top is not less than zero\n");
                 }
             } else if (mode == 1) {
-                if (registers[program[++ip]] < 0) {
-                    ip = addr;
+                int reg = program[++ip];
+                printf("JLZ: %d, R%d\n", registers[reg], reg);
+                if (registers[reg] < 0) {
+                    int addr = program[++ip];
+                    ip = addr-1;
                     printf("JLZ: Jump to %d\n", ip);
                 } else {
-                    printf("JLZ: No jump, register is not less than zero\n");
+                    printf("JLZ: No jump, register is not less than zero, %d\n", registers[program[ip]]);
                 }
             } else {
                 printf("Invalid JLZ mode\n");
@@ -357,13 +413,17 @@ void eval(int instr) {
             int mode = program[++ip];
             int value = program[++ip];
             if (mode == 0) { // Output value from stack
-                printf("OUT: Output value %d from stack\n", stack[sp]);
-            } else if (mode >= R0 && mode < NUM_REGS) { // Output register value
-                printf("OUT: Output register R%d value %d\n", mode, registers[value]);
+                printf("\033[1;32mOUT: Output value [%d] from stack\033[0m\n", stack[sp]);
+            } else if (mode == 1) { // Output register value
+                printf("\033[1;32mOUT: Output register R%d value [%d]\033[0m\n", mode, registers[value]);
             } else {
-                printf("Invalid OUT mode\n");
+                printf("\033[1;31mInvalid OUT mode, %d\n\033[0m", mode);
                 eval(HLT);
             }
+            break;
+        }
+        case NOP: {
+            printf("NOP: No operation\n");
             break;
         }
         default:
