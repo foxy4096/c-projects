@@ -1,3 +1,7 @@
+// Just use gcc to compile, don't use my ms.exe to compile, 😭
+// gcc code_11.c -o code_11.exe
+// ./code_11.exe
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
