@@ -371,3 +371,13 @@ void eval(int instr) {
             break;
     }
 }
+
+/* 
+    Just kill me already, otherwise I will keep writing this garbage code.
+    I am not a programmer, I am a human being, and I have feelings too.
+    I am not a machine, I am not a robot, I am not a computer.
+    I am a person, and I have a life to live.
+    I am not a slave to code, I am not a prisoner of my own mind.
+    WHAT THE FUCK
+    Anyway
+*/
