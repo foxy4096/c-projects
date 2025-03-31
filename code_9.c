@@ -1,3 +1,6 @@
+// Just a simple linked list implementation
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
